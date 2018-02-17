@@ -5,8 +5,20 @@
         <title>Webmap 201</title>
         <link rel="stylesheet" href="src/leaflet.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="plugins/Leaflet.Pancontrol/L.Control.Pan.css">
+        <link rel="stylesheet" href="plugins/Leaflet.ZoomSlider/L.Control.Zoomslider.css">
+        <link rel="stylesheet" href="plugins/Leaflet.MousePosition/L.Control.MousePosition.css">
+        <link rel="stylesheet" href="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css">
+        <link rel="stylesheet" href="plugins/Leaflet.EasyButton/easy-button.css">
+        <link rel="stylesheet" href="plugins/Leafet.Sidebar/L.Control.Sidebar.css">
         <script src="src/leaflet-src.js"></script>
         <script src="src/jquery-3.3.1.js"></script>
+        <script src="plugins/Leaflet.Pancontrol/L.Control.Pan.js"></script>
+        <script src="plugins/Leaflet.ZoomSlider/L.Control.Zoomslider.js"></script>
+        <script src="plugins/Leaflet.MousePosition/L.Control.MousePosition.js"></script>
+        <script src="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
+        <script src="plugins/Leaflet.EasyButton/easy-button.js"></script>
+        <script src="plugins/Leafet.Sidebar/L.Control.Sidebar.js"></script>
         <style>
             #mapdiv {
                 height:100vh;
@@ -22,15 +34,23 @@
             <h4>Mouse Location:<span id='mouse-location'></span></h4>
         </div>
         
-        <div id="mapdiv" class="col-md-9"></div>
+        <div id="mapdiv" class="col-md-12"></div>
         <script>
             var mymap;
             var lyrOSM;
             var mrkCurrentLocation;
             var popZocalo;
+            var ctlAttribute;
+            var ctlScale;
+            var ctlPan;
+            var ctlZoomSlider;
+            var ctlMousePosition;
+            var ctlMeasure;
+            var ctlEasyButton;
+            var ctlSidebar;
             
             $(document).ready(function(){
-                mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13});
+                mymap = L.map('mapdiv', {scrollWheelZoom: false, center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:false, zoomsliderControl: false});
                 lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
                 mymap.addLayer(lyrOSM);
                 
@@ -38,15 +58,49 @@
                 popZocalo.setLatLng([19.43262, -99.13325]);
                 popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
                 
+                ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
+                ctlAttribute.addAttribution('OSM');
+                ctlAttribute.addAttribution('<a href ="https://www.udemy.com/display-and-analyze-gis-data-on-the-web/learn/v4/overview">Mike Miller class on Udemy</a>');
                 
-                mymap.on('click', function(e){
-                    if (e.originalEvent.shiftKey) {
-                        alert(mymap.getZoom());
-                    } else {
-                        alert(e.latlng.toString());
-                    }
-                });
+                ctlScale = L.control.scale({position:'bottomleft', maxWidth:200}).addTo(mymap);
+                ctlPan = L.control.pan().addTo(mymap);
+                ctlZoomSlider = L.control.zoomslider({position:'topright'}).addTo(mymap);
+                ctlMousePosition = L.control.mousePosition().addTo(mymap);
+                ctlMeasure = L.control.polylineMeasure().addTo(mymap);
+                ctlSidebar = L.control.sidebar('side-bar').addTo(mymap);
                 
+                ctlEasyButton = L.easyButton({
+                    states: [{
+                        stateName: 'open-sidebar',
+                        icon:'glyphicon-triangle-right',
+                        title:'Open sidebar',
+                        onClick:function(control) {
+                            ctlSidebar.show();
+                            control.state('close-sidebar');
+                        }
+                },{
+                    stateName: 'close-sidebar',
+                    title: 'Close sidebar',
+                    icon: 'glyphicon-triangle-left',
+                    onClick:function(control) {
+                            ctlSidebar.hide();
+                            control.state('open-sidebar');
+                        }
+                      }]
+                    });
+                ctlEasyButton.addTo(mymap);
+                
+                    
+                
+                //mymap.on('click', function(e){
+                  //  if (e.originalEvent.shiftKey) {
+                    //    alert(mymap.getZoom());
+                    //} else {
+                      //  alert(e.latlng.toString());
+                //    }
+                //});
+                
+                //context menu is right click
                 mymap.on('contextmenu', function(e) {
                     var dtCurrentTime = new Date();
                     L.marker(e.latlng).addTo(mymap).bindPopup(e.latlng.toString()+"<br>"+dtCurrentTime.toString());
