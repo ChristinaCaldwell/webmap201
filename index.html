@@ -15,6 +15,8 @@
     </head>
     <body>
         <div id="side-bar" class="col-md-3">
+            <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button>
+            <button id="btnZocalo" class="btn btn-primary btn-block">Zoom to Zocalo</button>
             <h4>Zoom Level:<span id='zoom-level'></span></h4>
             <h4>Map Centre:<span id='map-center'></span></h4>
             <h4>Mouse Location:<span id='mouse-location'></span></h4>
@@ -25,11 +27,16 @@
             var mymap;
             var lyrOSM;
             var mrkCurrentLocation;
+            var popZocalo;
             
             $(document).ready(function(){
                 mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13});
                 lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
                 mymap.addLayer(lyrOSM);
+                
+                popZocalo = L.popup({maxWidth:200, keepInView:true});
+                popZocalo.setLatLng([19.43262, -99.13325]);
+                popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
                 
                 
                 mymap.on('click', function(e){
@@ -70,17 +77,25 @@
                 });
                 
                 mymap.on('moveend', function(){
-                    $('#map-center').html(mymap.getCenter().toString());
+                    $('#map-center').html(LatLngToArrayString(mymap.getCenter()));
                 });
                 
                 mymap.on('mousemove', function(e){
-                    $('#mouse-location').html(e.latlng.toString());
+                    $('#mouse-location').html(LatLngToArrayString(e.latlng));
                 });
                 
+                $("#btnLocate").click(function(){
+                    mymap.locate();
+                });
                 
-                
-                    
+                $("#btnZocalo").click(function(){
+                    mymap.setView([19.43262, -99.13325],17);
+                    mymap.openPopup(popZocalo);
+                });  
             });
+            function LatLngToArrayString(ll){
+                        return "[" +ll.lat.toFixed(5)+", "+ll.lng.toFixed(5)+"]";
+                    };
         </script>
     </body>
 </html>
