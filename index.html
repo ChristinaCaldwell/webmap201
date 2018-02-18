@@ -19,6 +19,7 @@
         <script src="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
         <script src="plugins/Leaflet.EasyButton/easy-button.js"></script>
         <script src="plugins/Leafet.Sidebar/L.Control.Sidebar.js"></script>
+        <script src="plugins/leaflet-providers.js"></script>
         <style>
             #mapdiv {
                 height:100vh;
@@ -38,6 +39,10 @@
         <script>
             var mymap;
             var lyrOSM;
+            var lyrTopo;
+            var lyrImagery;
+            var lyrOutdoors;
+            var lyrWatercolour;
             var mrkCurrentLocation;
             var popZocalo;
             var ctlAttribute;
@@ -48,14 +53,36 @@
             var ctlMeasure;
             var ctlEasyButton;
             var ctlSidebar;
+            var ctlLayers;
+            var objBasemaps;
+            var objOverlays;
+        
             
             $(document).ready(function(){
-                mymap = L.map('mapdiv', {scrollWheelZoom: false, center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:false, zoomsliderControl: false});
-                lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+                mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:false, zoomsliderControl: false});
+                lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
+                lyrTopo = L.tileLayer.provider('OpenTopoMap');
+                lyrImagery = L.tileLayer.provider('Esri.WorldImagery');
+                lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
+                lyrWatercolour = L.tileLayer.provider('Stamen.Watercolor');
                 mymap.addLayer(lyrOSM);
                 
+                objBasemaps = {
+                    "Open Street Map":lyrOSM,
+                    "Topo Map":lyrTopo,
+                    "Imagery":lyrImagery,
+                    "Outdoors":lyrOutdoors, 
+                    "Watercolour":lyrWatercolour
+                };
+                
+                objOverlays = {};
+                
+                ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
+                
+                
+                
                 popZocalo = L.popup({maxWidth:200, keepInView:true});
-                popZocalo.setLatLng([19.43262, -99.13325]);
+                popZocalo.setLatLng([19.43412, -99.13694]);
                 popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
                 
                 ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
@@ -143,7 +170,7 @@
                 });
                 
                 $("#btnZocalo").click(function(){
-                    mymap.setView([19.43262, -99.13325],17);
+                    mymap.setView([19.43412, -99.13694],17);
                     mymap.openPopup(popZocalo);
                 });  
             });
