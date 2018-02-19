@@ -30,6 +30,7 @@
         <div id="side-bar" class="col-md-3">
             <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button>
             <button id="btnZocalo" class="btn btn-primary btn-block">Zoom to Zocalo</button>
+            <button id="btnMuseo" class="btn btn-primary btn-block">Zoom to Anthropology Museum</button>
             <h4>Zoom Level:<span id='zoom-level'></span></h4>
             <h4>Map Centre:<span id='map-center'></span></h4>
             <h4>Mouse Location:<span id='mouse-location'></span></h4>
@@ -47,6 +48,7 @@
             var lyrWatercolour;
 			var lyrDroneRaster;
             var mrkCurrentLocation;
+            var mrkMuseo;
             var popZocalo;
             var ctlAttribute;
             var ctlScale;
@@ -88,11 +90,12 @@
                 
                 ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
                 
-                
-                
                 popZocalo = L.popup({maxWidth:200, keepInView:true});
                 popZocalo.setLatLng([19.43278, -99.13320]);
                 popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
+                
+                mrkMuseo = L.marker([19.42596, -99.1862],{draggable:true}).addTo(mymap);
+                mrkMuseo.bindTooltip("Anthropology Museum");
                 
                 ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
                 ctlAttribute.addAttribution('OSM');
@@ -181,12 +184,22 @@
                     mymap.setView([19.43278, -99.13320],17);
                     mymap.openPopup(popZocalo);
                 }); 
+                
+                $("#btnMuseo").click(function(){
+                    mymap.setView([19.42596,-99.1862],17);
+                    mrkMuseo.setLatLng([19.42596, -99.1862]);
+                    mrkMuseo.setTooltipContent("Anthropology Museum");
+                });
 				
 				$("#sldOpacity").on('change', function(){
 					$("#image-opacity").html(this.value);
 					lyrDroneRaster.setOpacity(this.value);
 					});
 				
+                mrkMuseo.on('dragend', function(){
+                    mrkMuseo.setTooltipContent("Current location:" + mrkMuseo.getLatLng().toString()+"<br>"+"Distance to Anthropology Museum (m): " + mrkMuseo.getLatLng().distanceTo([19.42596, -99.188620]).toFixed(0));
+                });
+                
             });
             function LatLngToArrayString(ll){
                         return "[" +ll.lat.toFixed(5)+", "+ll.lng.toFixed(5)+"]";
