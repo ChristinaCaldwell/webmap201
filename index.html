@@ -31,6 +31,8 @@
             <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button>
             <button id="btnZocalo" class="btn btn-primary btn-block">Zoom to Zocalo</button>
             <button id="btnMuseo" class="btn btn-primary btn-block">Zoom to Anthropology Museum</button>
+            <button id="btnRaster" class="btn btn-primary btn-block">Zoom to Raster Layer</button>
+            <button id="btnBikeRoute" class="btn btn-primary btn-block">Zoom to Bicycle route</button>
             <h4>Zoom Level:<span id='zoom-level'></span></h4>
             <h4>Map Centre:<span id='map-center'></span></h4>
             <h4>Mouse Location:<span id='mouse-location'></span></h4>
@@ -49,6 +51,7 @@
 			var lyrDroneRaster;
             var mrkCurrentLocation;
             var mrkMuseo;
+            var plnBikeRoute;
             var popZocalo;
             var ctlAttribute;
             var ctlScale;
@@ -96,6 +99,8 @@
                 
                 mrkMuseo = L.marker([19.42596, -99.1862],{draggable:true}).addTo(mymap);
                 mrkMuseo.bindTooltip("Anthropology Museum");
+                
+                plnBikeRoute = L.polyline([[[19.4138, -99.1876], [19.4167, -99.188], [19.4165, -99.1873], [19.4214, -99.1872], [19.4215, -99.1841], [19.4258, -99.1843], [19.4259, -99.1852]],[[19.4215, -99.1865], [19.4251, -99.1881], [19.4246, -99.1843]]], {color:'red'}).addTo(mymap);
                 
                 ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
                 ctlAttribute.addAttribution('OSM');
@@ -189,6 +194,15 @@
                     mymap.setView([19.42596,-99.1862],17);
                     mrkMuseo.setLatLng([19.42596, -99.1862]);
                     mrkMuseo.setTooltipContent("Anthropology Museum");
+                });
+                
+                $("#btnRaster").click(function(){
+                    mymap.setView([53.35924,-6.85919],14);
+
+                });
+                
+                $("#btnBikeRoute").click(function(){
+                    mymap.fitBounds(plnBikeRoute.getBounds());
                 });
 				
 				$("#sldOpacity").on('change', function(){
