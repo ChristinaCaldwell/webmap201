@@ -33,6 +33,8 @@
             <h4>Zoom Level:<span id='zoom-level'></span></h4>
             <h4>Map Centre:<span id='map-center'></span></h4>
             <h4>Mouse Location:<span id='mouse-location'></span></h4>
+			<h4>Image Opacity: <span id ='image-opacity'>0.5</span></h4>
+			<input type = 'range' id='sldOpacity' min='0' max ='1' step='0.1' value ='0.5'>
         </div>
         
         <div id="mapdiv" class="col-md-12"></div>
@@ -43,6 +45,7 @@
             var lyrImagery;
             var lyrOutdoors;
             var lyrWatercolour;
+			var lyrDroneRaster;
             var mrkCurrentLocation;
             var popZocalo;
             var ctlAttribute;
@@ -56,6 +59,7 @@
             var ctlLayers;
             var objBasemaps;
             var objOverlays;
+			
         
             
             $(document).ready(function(){
@@ -66,6 +70,9 @@
                 lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
                 lyrWatercolour = L.tileLayer.provider('Stamen.Watercolor');
                 mymap.addLayer(lyrOSM);
+				
+				lyrDroneRaster = L.imageOverlay('img/timahoe_slope.png', [[53.379894, -6.880788],[53.339547, -6.831880]], {opacity:0.5}).addTo(mymap);
+			
                 
                 objBasemaps = {
                     "Open Street Map":lyrOSM,
@@ -75,14 +82,16 @@
                     "Watercolour":lyrWatercolour
                 };
                 
-                objOverlays = {};
+                objOverlays = {
+					"Raster Image": lyrDroneRaster
+				};
                 
                 ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
                 
                 
                 
                 popZocalo = L.popup({maxWidth:200, keepInView:true});
-                popZocalo.setLatLng([19.43412, -99.13694]);
+                popZocalo.setLatLng([19.43278, -99.13320]);
                 popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
                 
                 ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
@@ -169,9 +178,15 @@
                 });
                 
                 $("#btnZocalo").click(function(){
-                    mymap.setView([19.43412, -99.13694],17);
+                    mymap.setView([19.43278, -99.13320],17);
                     mymap.openPopup(popZocalo);
-                });  
+                }); 
+				
+				$("#sldOpacity").on('change', function(){
+					$("#image-opacity").html(this.value);
+					lyrDroneRaster.setOpacity(this.value);
+					});
+				
             });
             function LatLngToArrayString(ll){
                         return "[" +ll.lat.toFixed(5)+", "+ll.lng.toFixed(5)+"]";
