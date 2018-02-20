@@ -2,24 +2,65 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <title>Webmap 201</title>
         <link rel="stylesheet" href="src/leaflet.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <link rel="stylesheet" href="plugins/Leaflet.Pancontrol/L.Control.Pan.css">
-        <link rel="stylesheet" href="plugins/Leaflet.ZoomSlider/L.Control.Zoomslider.css">
-        <link rel="stylesheet" href="plugins/Leaflet.MousePosition/L.Control.MousePosition.css">
         <link rel="stylesheet" href="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css">
         <link rel="stylesheet" href="plugins/Leaflet.EasyButton/easy-button.css">
-        <link rel="stylesheet" href="plugins/Leafet.Sidebar/L.Control.Sidebar.css">
+        <link rel="stylesheet" href="plugins/Leafet.Sidebar/L.Control.Sidebar.css"> 
+        <link rel="stylesheet" href="plugins/Leaflet.StyleEditor/css/Leaflet.StyleEditor.min.css" />
         <script src="src/leaflet-src.js"></script>
         <script src="src/jquery-3.3.1.js"></script>
-        <script src="plugins/Leaflet.Pancontrol/L.Control.Pan.js"></script>
-        <script src="plugins/Leaflet.ZoomSlider/L.Control.Zoomslider.js"></script>
         <script src="plugins/Leaflet.MousePosition/L.Control.MousePosition.js"></script>
         <script src="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
         <script src="plugins/Leaflet.EasyButton/easy-button.js"></script>
         <script src="plugins/Leafet.Sidebar/L.Control.Sidebar.js"></script>
         <script src="plugins/leaflet-providers.js"></script>
+        <script src="plugins/Leaflet.StyleEditor/javascript/Leaflet.StyleEditor.min.js"></script>
+        <script src="plugins/leaflet.ajax.min.js"></script>
+
+
+        <!--    ***************  Begin Leaflet.Draw-->
+        <link rel="stylesheet" href="plugins/leaflet-draw/leaflet.draw.css"/>
+        
+        <script src="plugins/leaflet-draw/Leaflet.draw.js"></script>
+        <script src="plugins/leaflet-draw/Leaflet.Draw.Event.js"></script>
+
+        <script src="plugins/leaflet-draw/edit/handler/Edit.Poly.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/Edit.SimpleShape.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/Edit.Rectangle.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/Edit.Marker.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/Edit.CircleMarker.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/Edit.Circle.js"></script>
+
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Feature.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Polyline.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Polygon.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.SimpleShape.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Rectangle.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Circle.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.Marker.js"></script>
+        <script src="plugins/leaflet-draw/draw/handler/Draw.CircleMarker.js"></script>
+
+        <script src="plugins/leaflet-draw/ext/TouchEvents.js"></script>
+        <script src="plugins/leaflet-draw/ext/LatLngUtil.js"></script>
+        <script src="plugins/leaflet-draw/ext/GeometryUtil.js"></script>
+        <script src="plugins/leaflet-draw/ext/LineUtil.Intersect.js"></script>
+        <script src="plugins/leaflet-draw/ext/Polyline.Intersect.js"></script>
+        <script src="plugins/leaflet-draw/ext/Polygon.Intersect.js"></script>
+
+        <script src="plugins/leaflet-draw/Control.Draw.js"></script>
+        <script src="plugins/leaflet-draw/Tooltip.js"></script>
+        <script src="plugins/leaflet-draw/Toolbar.js"></script>
+
+        <script src="plugins/leaflet-draw/draw/DrawToolbar.js"></script>
+        <script src="plugins/leaflet-draw/edit/EditToolbar.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/EditToolbar.Edit.js"></script>
+        <script src="plugins/leaflet-draw/edit/handler/EditToolbar.Delete.js"></script>
+        
+<!--    **************  End of Lealet Draw-->
+        
         <style>
             #mapdiv {
                 height:100vh;
@@ -29,15 +70,7 @@
     <body>
         <div id="side-bar" class="col-md-3">
             <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button>
-            <button id="btnZocalo" class="btn btn-primary btn-block">Zoom to Zocalo</button>
-            <button id="btnMuseo" class="btn btn-primary btn-block">Zoom to Anthropology Museum</button>
-            <button id="btnRaster" class="btn btn-primary btn-block">Zoom to Raster Layer</button>
-            <button id="btnBikeRoute" class="btn btn-primary btn-block">Zoom to Bicycle route</button>
-            <h4>Zoom Level:<span id='zoom-level'></span></h4>
-            <h4>Map Centre:<span id='map-center'></span></h4>
-            <h4>Mouse Location:<span id='mouse-location'></span></h4>
-			<h4>Image Opacity: <span id ='image-opacity'>0.5</span></h4>
-			<input type = 'range' id='sldOpacity' min='0' max ='1' step='0.1' value ='0.5'>
+            
         </div>
         
         <div id="mapdiv" class="col-md-12"></div>
@@ -48,36 +81,31 @@
             var lyrImagery;
             var lyrOutdoors;
             var lyrWatercolour;
-			var lyrDroneRaster;
+            var lyrEagleNest;
             var mrkCurrentLocation;
-            var mrkMuseo;
-            var plnBikeRoute;
-            var popZocalo;
-            var ctlAttribute;
-            var ctlScale;
-            var ctlPan;
-            var ctlZoomSlider;
-            var ctlMousePosition;
+            var fgpDrawnItems;
             var ctlMeasure;
             var ctlEasyButton;
             var ctlSidebar;
             var ctlLayers;
+            var ctlDraw;
             var objBasemaps;
             var objOverlays;
-			
         
-            
+			
             $(document).ready(function(){
-                mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:false, zoomsliderControl: false});
+                mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:true, zoomsliderControl: false});
                 lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
                 lyrTopo = L.tileLayer.provider('OpenTopoMap');
                 lyrImagery = L.tileLayer.provider('Esri.WorldImagery');
                 lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
                 lyrWatercolour = L.tileLayer.provider('Stamen.Watercolor');
                 mymap.addLayer(lyrOSM);
-				
-				lyrDroneRaster = L.imageOverlay('img/timahoe_slope.png', [[53.379894, -6.880788],[53.339547, -6.831880]], {opacity:0.5}).addTo(mymap);
 			
+                fgpDrawnItems = new L.featureGroup();
+                fgpDrawnItems.addTo(mymap);
+                
+                lyrEagleNest = L.geoJSON.ajax('data/wildlife_eagle.geojson').addTo(mymap);
                 
                 objBasemaps = {
                     "Open Street Map":lyrOSM,
@@ -88,29 +116,20 @@
                 };
                 
                 objOverlays = {
-					"Raster Image": lyrDroneRaster
-				};
+                    "Drawn Items":fgpDrawnItems,
+                    "Eagle Nest": lyrEagleNest
+                };
                 
                 ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
                 
-                popZocalo = L.popup({maxWidth:200, keepInView:true});
-                popZocalo.setLatLng([19.43278, -99.13320]);
-                popZocalo.setContent("<h2>Zocalo</h2><img src='img/zocalo.jpg' alt='picture of zocalo square, Mexico city' width='200px'>");
-                
-                mrkMuseo = L.marker([19.42596, -99.1862],{draggable:true}).addTo(mymap);
-                mrkMuseo.bindTooltip("Anthropology Museum");
-                
-                plnBikeRoute = L.polyline([[[19.4138, -99.1876], [19.4167, -99.188], [19.4165, -99.1873], [19.4214, -99.1872], [19.4215, -99.1841], [19.4258, -99.1843], [19.4259, -99.1852]],[[19.4215, -99.1865], [19.4251, -99.1881], [19.4246, -99.1843]]], {color:'red'}).addTo(mymap);
                 
                 ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
                 ctlAttribute.addAttribution('OSM');
                 
                 ctlScale = L.control.scale({position:'bottomleft', maxWidth:200}).addTo(mymap);
-                ctlPan = L.control.pan().addTo(mymap);
-                ctlZoomSlider = L.control.zoomslider({position:'topright'}).addTo(mymap);
                 ctlMousePosition = L.control.mousePosition().addTo(mymap);
                 ctlMeasure = L.control.polylineMeasure().addTo(mymap);
-                ctlSidebar = L.control.sidebar('side-bar').addTo(mymap);
+                ctlSidebar = L.control.sidebar('side-bar').addTo(mymap);               
                 
                 ctlEasyButton = L.easyButton({
                     states: [{
@@ -133,27 +152,30 @@
                     });
                 ctlEasyButton.addTo(mymap);
                 
-                    
-                
-                //mymap.on('click', function(e){
-                  //  if (e.originalEvent.shiftKey) {
-                    //    alert(mymap.getZoom());
-                    //} else {
-                      //  alert(e.latlng.toString());
-                //    }
-                //});
-                
-                //context menu is right click
-                mymap.on('contextmenu', function(e) {
-                    var dtCurrentTime = new Date();
-                    L.marker(e.latlng).addTo(mymap).bindPopup(e.latlng.toString()+"<br>"+dtCurrentTime.toString());
+                var ctlStyle = L.control.styleEditor({
+                    position:"topright",
+                    openOnLeafletDraw:true
                 });
+                mymap.addControl(ctlStyle);
                 
-                mymap.on('keypress', function(e) {
-                    if (e.originalEvent.key=="l") {
-                        mymap.locate();
+                ctlDraw = new L.Control.Draw({
+                    draw:{
+                        circle:false,
+                        circlemarker:false, 
+                        rectangle:false
+                    },
+                    edit:{
+                        featureGroup:fgpDrawnItems
                     }
                 });
+                mymap.addControl(ctlDraw);
+                
+
+                mymap.on('draw:created', function(e){
+                    console.log(e);
+                    fgpDrawnItems.addLayer(e.layer);
+                });
+                
                 
                 mymap.on('locationfound', function(e) {
                     console.log(e);
@@ -169,55 +191,12 @@
                     alert("Location was not found");
                 })
                 
-                mymap.on('zoomend', function(){
-                    $("#zoom-level").html(mymap.getZoom());
-                });
-                
-                mymap.on('moveend', function(){
-                    $('#map-center').html(LatLngToArrayString(mymap.getCenter()));
-                });
-                
-                mymap.on('mousemove', function(e){
-                    $('#mouse-location').html(LatLngToArrayString(e.latlng));
-                });
                 
                 $("#btnLocate").click(function(){
                     mymap.locate();
                 });
                 
-                $("#btnZocalo").click(function(){
-                    mymap.setView([19.43278, -99.13320],17);
-                    mymap.openPopup(popZocalo);
-                }); 
-                
-                $("#btnMuseo").click(function(){
-                    mymap.setView([19.42596,-99.1862],17);
-                    mrkMuseo.setLatLng([19.42596, -99.1862]);
-                    mrkMuseo.setTooltipContent("Anthropology Museum");
-                });
-                
-                $("#btnRaster").click(function(){
-                    mymap.setView([53.35924,-6.85919],14);
-
-                });
-                
-                $("#btnBikeRoute").click(function(){
-                    mymap.fitBounds(plnBikeRoute.getBounds());
-                });
-				
-				$("#sldOpacity").on('change', function(){
-					$("#image-opacity").html(this.value);
-					lyrDroneRaster.setOpacity(this.value);
-					});
-				
-                mrkMuseo.on('dragend', function(){
-                    mrkMuseo.setTooltipContent("Current location:" + mrkMuseo.getLatLng().toString()+"<br>"+"Distance to Anthropology Museum (m): " + mrkMuseo.getLatLng().distanceTo([19.42596, -99.188620]).toFixed(0));
-                });
-                
             });
-            function LatLngToArrayString(ll){
-                        return "[" +ll.lat.toFixed(5)+", "+ll.lng.toFixed(5)+"]";
-                    };
         </script>
     </body>
 </html>
