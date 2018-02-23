@@ -9,7 +9,12 @@
         <link rel="stylesheet" href="plugins/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css">
         <link rel="stylesheet" href="plugins/Leaflet.EasyButton/easy-button.css">
         <link rel="stylesheet" href="plugins/Leafet.Sidebar/L.Control.Sidebar.css"> 
-        <link rel="stylesheet" href="plugins/Leaflet.StyleEditor/css/Leaflet.StyleEditor.min.css" />
+        <link rel="stylesheet" href="plugins/Leaflet.StyleEditor/css/Leaflet.StyleEditor.min.css">
+        <link href="src/css/fontawesome-all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.css">
+        <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/MapkeyIcons.css">
+        <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.css">
+        
         <script src="src/leaflet-src.js"></script>
         <script src="src/jquery-3.3.1.js"></script>
         <script src="plugins/Leaflet.MousePosition/L.Control.MousePosition.js"></script>
@@ -19,6 +24,9 @@
         <script src="plugins/leaflet-providers.js"></script>
         <script src="plugins/Leaflet.StyleEditor/javascript/Leaflet.StyleEditor.min.js"></script>
         <script src="plugins/leaflet.ajax.min.js"></script>
+        <script src="plugins/leaflet.sprite.js"></script>
+        <script src="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.min.js"></script>
+        <script src="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.js"></script>
 
 
         <!--    ***************  Begin Leaflet.Draw-->
@@ -82,6 +90,7 @@
             var lyrOutdoors;
             var lyrWatercolour;
             var lyrEagleNest;
+            var lyrRaptorNest;
             var mrkCurrentLocation;
             var fgpDrawnItems;
             var ctlMeasure;
@@ -91,9 +100,22 @@
             var ctlDraw;
             var objBasemaps;
             var objOverlays;
+            var icnRedSprite;
+            var icnVioletSprite;
+            var icnLAMtree;
+            var icnLAMbird;
+            var icnMKtree;
+            var icnMKbird;
         
 			
             $(document).ready(function(){
+                icnRedSprite = L.spriteIcon('red');
+                icnVioletSprite = L.spriteIcon('violet');
+                icnLAMtree = L.AwesomeMarkers.icon({icon:'tree-conifer', markerColor:'green'});
+                icnLAMbird = L.AwesomeMarkers.icon({icon:'twitter', markerColor:'green', iconColor:'grey',prefix:'fa'});
+                icnMKtree =L.icon.mapkey({icon:'school', color:'black', background:'yellow'});
+                icnMKbird =L.icon.mapkey({icon:'tree_cinofer', color:'black', background:'yellow', borderRadius:5, size:50});
+                
                 mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:true, zoomsliderControl: false});
                 lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
                 lyrTopo = L.tileLayer.provider('OpenTopoMap');
@@ -105,9 +127,16 @@
                 fgpDrawnItems = new L.featureGroup();
                 fgpDrawnItems.addTo(mymap);
                 
-                lyrEagleNest = L.geoJSON.ajax('data/wildlife_eagle.geojson').addTo(mymap);
+                lyrEagleNest = L.geoJSON.ajax('data/wildlife_eagle.geojson', {
+                    pointToLayer:returnEagleMarker
+                }).addTo(mymap);
                 lyrEagleNest.on('data:loaded', function(){
                     mymap.fitBounds(lyrEagleNest.getBounds());
+                });
+                
+            lyrRaptorNest = L.geoJSON.ajax('data/wildlife_raptor.geojson', {
+                pointToLayer:returnRaptorMarker});
+                lyrRaptorNest.on('data:loaded', function(){
                 });
                 
                 objBasemaps = {
@@ -120,7 +149,8 @@
                 
                 objOverlays = {
                     "Drawn Items":fgpDrawnItems,
-                    "Eagle Nest": lyrEagleNest
+                    "Eagle Nest": lyrEagleNest,
+                    "Raptor Nest": lyrRaptorNest
                 };
                 
                 ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
@@ -194,12 +224,55 @@
                     alert("Location was not found");
                 })
                 
-                
                 $("#btnLocate").click(function(){
                     mymap.locate();
                 });
-                
             });
+            
+            function returnEagleMarker(json, latlng){
+                var att = json.properties;
+//                if (att.status =='ACTIVE NEST') {
+//                    var clrNest = 'deeppink';
+//                }
+//                else {
+//                    var clrNest = 'darkgreen';
+//                }
+//                return L.circle(latlng, {radius:804, color:clrNest, fillColor: 'green', fillOpacity:0.5}).bindTooltip("<h4>Ealgle Nest : "+att.nest_id+"</h4>Status: "+att.status);
+                if (att.status == 'ACTIVE NEST'){
+                    var icnEagle = icnMKbird;
+                } else {
+                    var icnEagle =icnMKtree;
+                }
+                return L.marker(latlng, {icon:icnEagle});
+            }
+            
+            function returnRaptorMarker (json, latlng){
+                var att = json.properties;
+                switch (att.recentspecies){
+                    case "Red-tail Hawk":
+                        var radRaptor = 533;
+                        break;
+                    case "Swainsons Hawk":
+                        var radRaptor = 400;
+                        break;
+                    default:
+                        var radRaptor = 804;
+                        break;
+                }
+                switch (att.recentstatus){
+                    case 'ACTIVE NEST':
+                        var optRaptor = {radius:radRaptor,color:'deeppink',fillColor:'blue', fillOpacity:0.5};
+                        break;
+                    case 'INACTIVE NEST':
+                        var optRaptor = {radius:radRaptor, color:'blue',fillColor:'blue', fillOpacity:0.5};
+                        break;
+                    case 'FLEDGED NEST':
+                        var optRaptor = {radius:radRaptor,color:'deeppink',fillColor:'blue', fillOpacity:0.5, dashArray:[2,8]};
+                        break;
+                }
+                return L.circle(latlng, optRaptor).bindPopup("<h4>Raptor Nest :"+att.Nest_ID+"</h4>Status: "+att.recentstatus+"<br>Species:"+att.recentspecies+"<br>Last Survey:"+att.lastsurvey);
+            }
+            
         </script>
     </body>
 </html>
