@@ -14,6 +14,8 @@
         <link rel="stylesheet" href="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.css">
         <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/MapkeyIcons.css">
         <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.css">
+        <link rel="stylesheet" href="plugins/MarkerCluster.css">
+        <link rel="stylesheet" href="plugins/MarkerCluster.Default.css">
         
         <script src="src/leaflet-src.js"></script>
         <script src="src/jquery-3.3.1.js"></script>
@@ -27,6 +29,7 @@
         <script src="plugins/leaflet.sprite.js"></script>
         <script src="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.min.js"></script>
         <script src="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.js"></script>
+        <script src="plugins/leaflet.markercluster.js"></script>
 
 
         <!--    ***************  Begin Leaflet.Draw-->
@@ -91,6 +94,10 @@
             var lyrWatercolour;
             var lyrEagleNest;
             var lyrRaptorNest;
+            var lyrMarkerCluster;
+            var lyrClientLines;
+            var lyrBUOWL;
+            var lyrGBH;
             var mrkCurrentLocation;
             var fgpDrawnItems;
             var ctlMeasure;
@@ -100,21 +107,9 @@
             var ctlDraw;
             var objBasemaps;
             var objOverlays;
-            var icnRedSprite;
-            var icnVioletSprite;
-            var icnLAMtree;
-            var icnLAMbird;
-            var icnMKtree;
-            var icnMKbird;
-        
+
 			
             $(document).ready(function(){
-                icnRedSprite = L.spriteIcon('red');
-                icnVioletSprite = L.spriteIcon('violet');
-                icnLAMtree = L.AwesomeMarkers.icon({icon:'tree-conifer', markerColor:'green'});
-                icnLAMbird = L.AwesomeMarkers.icon({icon:'twitter', markerColor:'green', iconColor:'grey',prefix:'fa'});
-                icnMKtree =L.icon.mapkey({icon:'school', color:'black', background:'yellow'});
-                icnMKbird =L.icon.mapkey({icon:'tree_cinofer', color:'black', background:'yellow', borderRadius:5, size:50});
                 
                 mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:true, zoomsliderControl: false});
                 lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
@@ -134,10 +129,21 @@
                     mymap.fitBounds(lyrEagleNest.getBounds());
                 });
                 
-            lyrRaptorNest = L.geoJSON.ajax('data/wildlife_raptor.geojson', {
-                pointToLayer:returnRaptorMarker});
-                lyrRaptorNest.on('data:loaded', function(){
-                });
+                lyrMarkerCluster = L.markerClusterGroup();
+                
+                
+                lyrRaptorNest = L.geoJSON.ajax('data/wildlife_raptor.geojson', {
+                    pointToLayer:returnRaptorMarker});
+                    lyrRaptorNest.on('data:loaded', function(){
+                        lyrMarkerCluster.addLayer(lyrRaptorNest);
+                        lyrMarkerCluster.addTo(mymap);
+                    });
+                lyrClientLines = L.geoJSON.ajax('data/client_lines.geojson',
+                    {style:styleClientLinears, onEachFeature:processClientLinears}).addTo(mymap);
+                
+                lyrBUOWL= L.geoJSON.ajax('data/wildlife_buowl.geojson',{style:styleBUOWL, onEachFeature:processBUOWL, filter:filterBUOWL}).addTo(mymap);
+                
+                lyrGBH = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style:{color:'fuchsia'}}).bindTooltip('GBH Nesting Area').addTo(mymap);
                 
                 objBasemaps = {
                     "Open Street Map":lyrOSM,
@@ -148,9 +154,12 @@
                 };
                 
                 objOverlays = {
+                    "Client Lines": lyrClientLines,
+                    "Burrowing Owl Habitat": lyrBUOWL,
                     "Drawn Items":fgpDrawnItems,
                     "Eagle Nest": lyrEagleNest,
-                    "Raptor Nest": lyrRaptorNest
+                    "Raptor Nest": lyrMarkerCluster,
+                    "GBH Rookaries": lyrGBH
                 };
                 
                 ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
@@ -231,19 +240,13 @@
             
             function returnEagleMarker(json, latlng){
                 var att = json.properties;
-//                if (att.status =='ACTIVE NEST') {
-//                    var clrNest = 'deeppink';
-//                }
-//                else {
-//                    var clrNest = 'darkgreen';
-//                }
-//                return L.circle(latlng, {radius:804, color:clrNest, fillColor: 'green', fillOpacity:0.5}).bindTooltip("<h4>Ealgle Nest : "+att.nest_id+"</h4>Status: "+att.status);
-                if (att.status == 'ACTIVE NEST'){
-                    var icnEagle = icnMKbird;
-                } else {
-                    var icnEagle =icnMKtree;
+                if (att.status =='ACTIVE NEST') {
+                    var clrNest = 'deeppink';
                 }
-                return L.marker(latlng, {icon:icnEagle});
+                else {
+                    var clrNest = 'darkgreen';
+                }
+                return L.circle(latlng, {radius:804, color:clrNest, fillColor: 'green', fillOpacity:0.5}).bindTooltip("<h4>Ealgle Nest : "+att.nest_id+"</h4>Status: "+att.status);
             }
             
             function returnRaptorMarker (json, latlng){
@@ -271,6 +274,66 @@
                         break;
                 }
                 return L.circle(latlng, optRaptor).bindPopup("<h4>Raptor Nest :"+att.Nest_ID+"</h4>Status: "+att.recentstatus+"<br>Species:"+att.recentspecies+"<br>Last Survey:"+att.lastsurvey);
+            }
+            
+            function styleClientLinears(json) {
+                var att = json.properties;
+                switch (att.type) {
+                    case 'Pipeline':
+                        return {color:'peru'};
+                        break;
+                    case 'Flowline':
+                        return {color:'navy'};
+                        break;
+                    case 'Flowline, est.':
+                        return {color:'navy', dashArray:"5,5"};
+                        break;    
+                    case 'Electric Line':
+                        return {color:'darkgreen'};
+                        break;
+                    case 'Access Road - Confirmed':
+                        return {color:'darkred'};
+                        break;
+                    case 'Access Road - Estimated':
+                        return {color:'darkred', dashArray:"5,5"};
+                        break;
+                    case 'Extraction':
+                        return {color:'indigo'};
+                        break;
+                    default:
+                        return {color:'darkgoldenrod'};
+                }
+            }
+            
+            function processClientLinears(json,lyr){
+                var att = json.properties;
+                lyr.bindTooltip("<h4>Linear Project: "+att.Project+"</h4>Type: "+att.type+"<br>Row Width: "+att.row_width);
+            }
+            
+            function styleBUOWL(json){
+                var att = json.properties;
+                switch (att.hist_occup){
+                    case 'Yes':
+                        return {color:'deeppink', fillColor:'yellow'};
+                        break;
+                    case 'Undetermined':
+                        return {color:'yellow'}
+                        break;
+                    }
+            }
+            
+            function filterBUOWL(json){
+                var att =json.properties;
+                if (att.recentstatus=='REMOVED'){
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            
+            function processBUOWL(json,lyr){
+                var att= json.properties;
+                lyr.bindTooltip("<h4>Habitat ID: "+att.habitat_id+"</h4>Historically Occupied:" +att.hist_occup+"<br>Status: "+att.recentstatus);
             }
             
         </script>
