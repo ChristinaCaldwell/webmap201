@@ -10,7 +10,7 @@
         <link rel="stylesheet" href="plugins/Leaflet.EasyButton/easy-button.css">
         <link rel="stylesheet" href="plugins/Leafet.Sidebar/L.Control.Sidebar.css"> 
         <link rel="stylesheet" href="plugins/Leaflet.StyleEditor/css/Leaflet.StyleEditor.min.css">
-        <link href="src/css/fontawesome-all.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="src/css/fontawesome-all.min.css">
         <link rel="stylesheet" href="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.css">
         <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/MapkeyIcons.css">
         <link rel="stylesheet" href="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.css">
@@ -30,7 +30,6 @@
         <script src="plugins/Leaflet.awesomemarker/leaflet.awesome-markers.min.js"></script>
         <script src="plugins/Leaflet.MapKeyIcons/L.Icon.Mapkey.js"></script>
         <script src="plugins/leaflet.markercluster.js"></script>
-
 
         <!--    ***************  Begin Leaflet.Draw-->
         <link rel="stylesheet" href="plugins/leaflet-draw/leaflet.draw.css"/>
@@ -76,14 +75,40 @@
             #mapdiv {
                 height:100vh;
             }
+            .col-xs-12, .col-xs-6, .col-xs-4{
+                padding:3px;
+            }
+            #divProject {
+                background-color: beige;
+            }
+            .errorMsg {
+                padding:0px;
+                text-align: center;
+                background-color: lightsalmon;
+            }
+            
         </style>
     </head>
     <body>
         <div id="side-bar" class="col-md-3">
-            <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button>
-            
+            <button id="btnLocate" class="btn btn-primary btn-block">Locate Me</button><br>
+            <div id="divProject" class="col-xs-12">
+                <div id="divProjectLabel" class="text-center col-xs-12">
+                    <h4>Linear Projects</h4>  
+                </div>
+                <div id = "divProjectError" class="errorMsg col-xs-12"></div>
+                <div id='divFindProject' class="form-group">
+                    <div class="col-xs-6">
+                        <input type="text" id="txtFindProject" class="form-control" placeholder="Project ID">
+                    </div>
+                    <div class="col-xs-6">
+                        <btn id='btnFindProject' class="btn btn-primary btn-block">Find Project</btn>
+                    </div>
+                </div> 
+                <div id="divProjectData" class=""></div>   
+            </div>
         </div>
-        
+            
         <div id="mapdiv" class="col-md-12"></div>
         <script>
             var mymap;
@@ -98,6 +123,7 @@
             var lyrClientLines;
             var lyrBUOWL;
             var lyrGBH;
+            var lyrSearch;
             var mrkCurrentLocation;
             var fgpDrawnItems;
             var ctlMeasure;
@@ -110,62 +136,9 @@
 
 			
             $(document).ready(function(){
-                
-                mymap = L.map('mapdiv', {center:[19.4, -99.2], zoom:13, attributionControl:false, zoomControl:true, zoomsliderControl: false});
-                lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
-                lyrTopo = L.tileLayer.provider('OpenTopoMap');
-                lyrImagery = L.tileLayer.provider('Esri.WorldImagery');
-                lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
-                lyrWatercolour = L.tileLayer.provider('Stamen.Watercolor');
-                mymap.addLayer(lyrOSM);
-			
-                fgpDrawnItems = new L.featureGroup();
-                fgpDrawnItems.addTo(mymap);
-                
-                lyrEagleNest = L.geoJSON.ajax('data/wildlife_eagle.geojson', {
-                    pointToLayer:returnEagleMarker
-                }).addTo(mymap);
-                lyrEagleNest.on('data:loaded', function(){
-                    mymap.fitBounds(lyrEagleNest.getBounds());
-                });
-                
-                lyrMarkerCluster = L.markerClusterGroup();
-                
-                
-                lyrRaptorNest = L.geoJSON.ajax('data/wildlife_raptor.geojson', {
-                    pointToLayer:returnRaptorMarker});
-                    lyrRaptorNest.on('data:loaded', function(){
-                        lyrMarkerCluster.addLayer(lyrRaptorNest);
-                        lyrMarkerCluster.addTo(mymap);
-                    });
-                lyrClientLines = L.geoJSON.ajax('data/client_lines.geojson',
-                    {style:styleClientLinears, onEachFeature:processClientLinears}).addTo(mymap);
-                
-                lyrBUOWL= L.geoJSON.ajax('data/wildlife_buowl.geojson',{style:styleBUOWL, onEachFeature:processBUOWL, filter:filterBUOWL}).addTo(mymap);
-                
-                lyrGBH = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style:{color:'fuchsia'}}).bindTooltip('GBH Nesting Area').addTo(mymap);
-                
-                objBasemaps = {
-                    "Open Street Map":lyrOSM,
-                    "Topo Map":lyrTopo,
-                    "Imagery":lyrImagery,
-                    "Outdoors":lyrOutdoors, 
-                    "Watercolour":lyrWatercolour
-                };
-                
-                objOverlays = {
-                    "Client Lines": lyrClientLines,
-                    "Burrowing Owl Habitat": lyrBUOWL,
-                    "Drawn Items":fgpDrawnItems,
-                    "Eagle Nest": lyrEagleNest,
-                    "Raptor Nest": lyrMarkerCluster,
-                    "GBH Rookaries": lyrGBH
-                };
-                
-                ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
-                
-                
-                ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
+                // ***************Map Initilisation ************
+                mymap = L.map('mapdiv', {center:[40.18, -104.83], zoom:11, attributionControl:false});
+                                ctlAttribute = L.control.attribution({position:'bottomleft'}).addTo(mymap);
                 ctlAttribute.addAttribution('OSM');
                 
                 ctlScale = L.control.scale({position:'bottomleft', maxWidth:200}).addTo(mymap);
@@ -200,6 +173,57 @@
                 });
                 mymap.addControl(ctlStyle);
                 
+                
+                // ***********Layer initilisation ************
+                lyrOSM = L.tileLayer.provider('OpenStreetMap.Mapnik');
+                lyrTopo = L.tileLayer.provider('OpenTopoMap');
+                lyrImagery = L.tileLayer.provider('Esri.WorldImagery');
+                lyrOutdoors = L.tileLayer.provider('Thunderforest.Outdoors');
+                lyrWatercolour = L.tileLayer.provider('Stamen.Watercolor');
+                mymap.addLayer(lyrOSM);
+			
+                fgpDrawnItems = new L.featureGroup();
+                fgpDrawnItems.addTo(mymap);
+                
+                lyrEagleNest = L.geoJSON.ajax('data/wildlife_eagle.geojson', {
+                    pointToLayer:returnEagleMarker
+                }).addTo(mymap);
+                
+                lyrMarkerCluster = L.markerClusterGroup();
+                
+                
+                lyrRaptorNest = L.geoJSON.ajax('data/wildlife_raptor.geojson', {
+                    pointToLayer:returnRaptorMarker});
+                    lyrRaptorNest.on('data:loaded', function(){
+                        lyrMarkerCluster.addLayer(lyrRaptorNest);
+                        lyrMarkerCluster.addTo(mymap);
+                    });
+                lyrClientLines = L.geoJSON.ajax('data/client_lines.geojson',
+                    {style:styleClientLinears, onEachFeature:processClientLinears}).addTo(mymap);
+                
+                lyrBUOWL= L.geoJSON.ajax('data/wildlife_buowl.geojson',{style:styleBUOWL, onEachFeature:processBUOWL, filter:filterBUOWL}).addTo(mymap);
+                
+                lyrGBH = L.geoJSON.ajax('data/wildlife_gbh.geojson', {style:{color:'fuchsia'}}).bindTooltip('GBH Nesting Area').addTo(mymap);
+                // *********************** Setup layer control *********************
+                objBasemaps = {
+                    "Open Street Map":lyrOSM,
+                    "Topo Map":lyrTopo,
+                    "Imagery":lyrImagery,
+                    "Outdoors":lyrOutdoors, 
+                    "Watercolour":lyrWatercolour
+                };
+                
+                objOverlays = {
+                    "Client Lines": lyrClientLines,
+                    "Burrowing Owl Habitat": lyrBUOWL,
+                    "Drawn Items":fgpDrawnItems,
+                    "Eagle Nest": lyrEagleNest,
+                    "Raptor Nest": lyrMarkerCluster,
+                    "GBH Rookaries": lyrGBH
+                };
+                
+                ctlLayers = L.control.layers(objBasemaps, objOverlays).addTo(mymap);
+                //****** Draw control ************
                 ctlDraw = new L.Control.Draw({
                     draw:{
                         circle:false,
@@ -211,14 +235,13 @@
                     }
                 });
                 mymap.addControl(ctlDraw);
-                
 
                 mymap.on('draw:created', function(e){
                     console.log(e);
                     fgpDrawnItems.addLayer(e.layer);
                 });
                 
-                
+                // ************ Location events 
                 mymap.on('locationfound', function(e) {
                     console.log(e);
                     if (mrkCurrentLocation) {
@@ -232,11 +255,42 @@
                     console.log(e);
                     alert("Location was not found");
                 })
-                
-                $("#btnLocate").click(function(){
+            });
+            
+            // *********BUOWL Functions *************
+            
+            function styleBUOWL(json){
+                var att = json.properties;
+                switch (att.hist_occup){
+                    case 'Yes':
+                        return {color:'deeppink', fillColor:'yellow'};
+                        break;
+                    case 'Undetermined':
+                        return {color:'yellow'}
+                        break;
+                    }
+            }
+            
+            function filterBUOWL(json){
+                var att =json.properties;
+                if (att.recentstatus=='REMOVED'){
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            
+            function processBUOWL(json,lyr){
+                var att= json.properties;
+                lyr.bindTooltip("<h4>Habitat ID: "+att.habitat_id+"</h4>Historically Occupied:" +att.hist_occup+"<br>Status: "+att.recentstatus);
+            }
+            
+            // **********jQuery event handlers *********
+            $("#btnLocate").click(function(){
                     mymap.locate();
                 });
-            });
+            
+            // ***********eagle functions *************
             
             function returnEagleMarker(json, latlng){
                 var att = json.properties;
@@ -249,6 +303,7 @@
                 return L.circle(latlng, {radius:804, color:clrNest, fillColor: 'green', fillOpacity:0.5}).bindTooltip("<h4>Ealgle Nest : "+att.nest_id+"</h4>Status: "+att.status);
             }
             
+            // ************** Raptor functions *****************
             function returnRaptorMarker (json, latlng){
                 var att = json.properties;
                 switch (att.recentspecies){
@@ -276,6 +331,7 @@
                 return L.circle(latlng, optRaptor).bindPopup("<h4>Raptor Nest :"+att.Nest_ID+"</h4>Status: "+att.recentstatus+"<br>Species:"+att.recentspecies+"<br>Last Survey:"+att.lastsurvey);
             }
             
+            // *************** Client linears ***********
             function styleClientLinears(json) {
                 var att = json.properties;
                 switch (att.type) {
@@ -310,31 +366,34 @@
                 lyr.bindTooltip("<h4>Linear Project: "+att.Project+"</h4>Type: "+att.type+"<br>Row Width: "+att.row_width);
             }
             
-            function styleBUOWL(json){
-                var att = json.properties;
-                switch (att.hist_occup){
-                    case 'Yes':
-                        return {color:'deeppink', fillColor:'yellow'};
-                        break;
-                    case 'Undetermined':
-                        return {color:'yellow'}
-                        break;
+            function returnClientLineByID(id){
+                var arLayers = lyrClientLines.getLayers();
+                for (i=0;i<arLayers.length-1;i++){
+                    var featureID = arLayers[i].feature.properties.Project;
+                    if (featureID == id) {
+                        return arLayers[i];
                     }
+                } 
+                return false;
             }
             
-            function filterBUOWL(json){
-                var att =json.properties;
-                if (att.recentstatus=='REMOVED'){
-                    return false;
-                } else {
-                    return true;
-                }
-            }
+            $('#btnFindProject').click(function(){
+                var id = $("#txtFindProject").val();
+                var lyr = returnClientLineByID(id);
+                    if (lyr){
+                        if (lyrSearch) {
+                            lyrSearch.remove();
+                        }
+                        lyrSearch = L.geoJSON(lyr.toGeoJSON(), {style:{color:'red', weight:10, opacity:0.5}}).addTo(mymap);
+                        mymap.fitBounds(lyr.getBounds().pad(1));
+                        var att = lyr.feature.properties;
+                        $("#divProjectData").html("<h4 class = 'text-center'>Attributes</h4><h5>Type :" +att.type+"</h5><h5> Row width: "+ att.row_width +"m </h5>");
+                    } else {
+                        $('#divProjectError').html("*******Project ID not found*****");
+                    }
+            });
             
-            function processBUOWL(json,lyr){
-                var att= json.properties;
-                lyr.bindTooltip("<h4>Habitat ID: "+att.habitat_id+"</h4>Historically Occupied:" +att.hist_occup+"<br>Status: "+att.recentstatus);
-            }
+            
             
         </script>
     </body>
